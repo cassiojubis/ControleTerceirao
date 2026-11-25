@@ -1,0 +1,26 @@
+CONTROLE DO TERCEIRÃO — como colocar no ar
+==========================================
+
+1) Senha de admin: a que você combinou (fica guardada embaralhada no config.php).
+
+2) TESTAR NO PC (XAMPP)
+   - Copie a pasta "controle-terceirao" para C:\xampp\htdocs\
+   - Ligue Apache e MySQL no XAMPP
+   - Abra http://localhost/controle-terceirao/
+   - O banco "controle_terceirao" é criado sozinho, já com os dados da planilha.
+
+3) COLOCAR NA WASMER EDGE (igual você fez com a URNA)
+   - Crie um app PHP novo e ative o banco de dados MySQL da Wasmer.
+   - Faça "Upload files" com os 5 arquivos: index.php, api.php, db.php, config.php, LEIA-ME.txt
+   - Abra o link do app. Na primeira vez ele cria as tabelas e importa a planilha sozinho.
+   - Os dados do banco (DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD) a Wasmer já passa sozinha.
+
+4) USANDO
+   - A turma abre o link e vê tudo, sem senha (só leitura).
+   - Você toca em "Admin", coloca a senha, e aí pode:
+       * tocar no aluno > tocar no mês > marcar quanto pagou
+       * registrar rifa, convidado extra da festa ou pagamento extra
+       * editar aluno (mensalidade, convidados, números da rifa)
+       * ⚙️ Config: preço do número da rifa, meses, título
+       * ⬇️ Planilha: baixa tudo em CSV (abre no Excel)
+       * 📲 WhatsApp: copia o resumo de quem deve, pra colar no grupo
