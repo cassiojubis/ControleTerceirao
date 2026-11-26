@@ -203,7 +203,6 @@ function render() {
   const falta = base.reduce((s, c) => s + c.falta, 0), quit = base.filter(c => c.falta <= 0).length;
   const rifaP = base.reduce((s, c) => s + c.rifaPago, 0), rifaD = base.reduce((s, c) => s + c.rifaDev, 0);
   const pct = meta ? Math.min(100, arrec / meta * 100) : 0;
-  const l = filtrados();
 
   $('#app').innerHTML = `
   <div class="stats">
@@ -227,14 +226,17 @@ function render() {
   <div class="chips">
     ${[['todos', 'Todos'], ['devendo', 'Devendo'], ['atrasado', 'Atrasados'], ['quitado', 'Quitados'], ['rifa', '🎟️ Rifa pendente']].map(([k, n]) => `<button class="chip ${S.filtro === k ? 'on' : ''}" data-f="${k}">${n}</button>`).join('')}
   </div>
-  <div class="list">
-    ${l.length ? l.map(({ a, c }) => `
+  <div class="list" id="lista">${htmlLista()}</div>`;
+}
+
+function htmlLista() {
+  const l = filtrados();
+  return l.length ? l.map(({ a, c }) => `
       <div class="al" data-id="${a.id}">
         <div><div class="nm">${esc(a.nome)}</div><div class="tm">${S.turma === 'todas' ? esc(turmaNome(a.turma_id)) + ' · ' : ''}${brl0(c.vm)}/mês${c.rifaFalta > 0 ? ' · 🎟️ deve rifa' : ''}</div></div>
         <div class="money"><span class="badge b-${c.st.k}">${c.st.t}</span><div style="margin-top:4px"><b>${brl0(c.pago)}</b> / ${brl0(c.devido)}</div></div>
         <div class="dots">${meses().map(m => `<span class="dot ${estadoMes(a, m)}" title="${MESES[m]}"></span>`).join('')}</div>
-      </div>`).join('') : '<div class="empty">Ninguém aqui 👀</div>'}
-  </div>`;
+      </div>`).join('') : '<div class="empty">Ninguém aqui 👀</div>';
 }
 
 // ---------- detalhe do aluno ----------
@@ -296,7 +298,8 @@ function editarMes(aid, m) {
   $('#sheet').querySelectorAll('[data-q]').forEach(b => b.onclick = () => salvar(b.dataset.q));
   $('#okMes').onclick = () => salvar($('#vmes').value);
   if ($('#limpaMes')) $('#limpaMes').onclick = () => salvar(null);
-  setTimeout(() => $('#vmes').focus(), 250);
+  $('#vmes').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); salvar($('#vmes').value); } });
+  setTimeout(() => { $('#vmes').focus(); $('#vmes').select(); }, 250);
 }
 
 function novoPagamento(aid) {
@@ -371,7 +374,7 @@ function login() {
     <label>Senha</label><input class="f" id="senha" type="password" autocomplete="current-password">
     <div class="row"><button class="btn pri" id="okLog">Entrar</button></div>`);
   const go = async () => { if (await acao('login', { senha: $('#senha').value }, 'Modo admin ligado ✓')) fechar(); };
-  $('#okLog').onclick = go; $('#senha').onkeydown = e => e.key === 'Enter' && go();
+  $('#okLog').onclick = go; $('#senha').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
   setTimeout(() => $('#senha').focus(), 250);
 }
 
@@ -407,8 +410,10 @@ function csv() {
 }
 
 // ---------- eventos ----------
+let downNoFundo = false; // só fecha a janela se o clique começou E terminou fora dela (evita fechar ao selecionar texto)
+document.addEventListener('mousedown', e => { downNoFundo = e.target === $('#ov'); });
 document.addEventListener('click', async e => {
-  const t = e.target.closest('button,[data-id],[data-mes],a[data-x]'); if (!t) { if (e.target === $('#ov')) fechar(); return; }
+  const t = e.target.closest('button,[data-id],[data-mes],a[data-x]'); if (!t) { if (e.target === $('#ov') && (downNoFundo || e.pointerType !== 'mouse')) fechar(); return; }
   const d = t.dataset;
   if (d.t) { S.turma = d.t; render(); }
   else if (d.f) { S.filtro = d.f; render(); }
@@ -429,7 +434,8 @@ document.addEventListener('click', async e => {
 });
 $('#btnAdmin').onclick = login;
 $('#btnZap').onclick = zap;
-document.addEventListener('input', e => { if (e.target.id === 'q') { S.q = e.target.value; const pos = e.target.selectionStart; render(); const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); } });
+document.addEventListener('input', e => { if (e.target.id === 'q' && !e.isComposing) { S.q = e.target.value; $('#lista').innerHTML = htmlLista(); } });
+document.addEventListener('compositionend', e => { if (e.target.id === 'q') { S.q = e.target.value; $('#lista').innerHTML = htmlLista(); } });
 document.addEventListener('change', e => { if (e.target.id === 'ordem') { S.ordem = e.target.value; render(); } });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fechar(); });
 carregar();
