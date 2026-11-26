@@ -287,7 +287,8 @@ function editarMes(aid, m) {
   abrir(`
     <div class="sh"><div><h2>${MESES_L[m]}</h2><div class="sub">${esc(a.nome)}</div></div><button class="x" data-back="${a.id}">×</button></div>
     <label>Valor pago</label>
-    <input class="f" id="vmes" inputmode="decimal" placeholder="Ex.: 50" value="${v ? String(v).replace('.', ',') : ''}">
+    <input class="f" id="vmes" inputmode="decimal" placeholder="${v ? 'Atual: ' + String(v).replace('.', ',') : 'Ex.: 50'}">
+    ${v ? `<div class="hint">Já tem ${brl0(v)} marcado. Digite outro valor só se quiser trocar.</div>` : ''}
     <div class="quick">${vals.map(x => `<button class="btn sm" data-q="${x}">${brl0(x)}</button>`).join('')}</div>
     <div class="row">
       <button class="btn pri" id="okMes">Salvar</button>
@@ -296,10 +297,11 @@ function editarMes(aid, m) {
     </div>`);
   const salvar = async val => { if (await acao('mensalidade', { aluno_id: a.id, mes: m, valor: val }, 'Salvo ✓')) detalhe(a.id); };
   $('#sheet').querySelectorAll('[data-q]').forEach(b => b.onclick = () => salvar(b.dataset.q));
-  $('#okMes').onclick = () => salvar($('#vmes').value);
+  const salvarCampo = () => { const x = $('#vmes').value.trim(); if (!x && v) return detalhe(a.id); salvar(x); };
+  $('#okMes').onclick = salvarCampo;
   if ($('#limpaMes')) $('#limpaMes').onclick = () => salvar(null);
-  $('#vmes').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); salvar($('#vmes').value); } });
-  setTimeout(() => { $('#vmes').focus(); $('#vmes').select(); }, 250);
+  $('#vmes').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); salvarCampo(); } });
+  setTimeout(() => $('#vmes').focus(), 250);
 }
 
 function novoPagamento(aid) {
